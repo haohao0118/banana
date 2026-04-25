@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>猴哥传奇</title>
+  <link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+  <div class="game-wrapper">
+
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay login-overlay" id="auth-modal">
+      <div class="modal-box auth-box">
+        <div class="modal-emoji">👤</div>
+        <p class="modal-text">先登录再开始游戏</p>
+        <p class="modal-offline-desc">首次进入请注册账号，之后会自动保持登录状态</p>
+        <p class="modal-pw-hint" id="auth-pw-hint" style="display:none">密码至少 6 个字符</p>
+        <input class="auth-input" id="auth-username" type="text" placeholder="用户名">
+        <input class="auth-input" id="auth-password" type="password" placeholder="密码">
+        <div class="modal-btns auth-btns">
+          <button class="modal-btn-cancel" id="auth-register" type="button">注册</button>
+          <button class="modal-btn-confirm" id="auth-login" type="button">登录</button>
+        </div>
+        <button class="auth-link" id="auth-switch-mode" type="button">切换到登录</button>
+      </div>
+    </div>
+
+    <header class="top-bar">
+      <div class="stat-item">
+        <span class="stat-icon">🍌</span>
+        <div class="stat-info">
+          <span class="stat-label">香蕉</span>
+          <span class="stat-value" id="banana-display">0</span>
+        </div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item stat-item-right">
+        <span class="stat-icon">⚡</span>
+        <div class="stat-info">
+          <span class="stat-label">每秒速率</span>
+          <span class="stat-value" id="rate-display">+0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── 香蕉树 Tab ── -->
+    <div class="tab-panel active" id="tab-shop">
+      <button class="mail-float-btn" id="mail-btn" type="button" aria-label="邮件">
+        ✉️ 邮件
+        <span class="mail-top-badge" id="mail-badge" style="display:none">0</span>
+      </button>
+      <main class="click-area">
+        <div id="monkey-ring" class="monkey-ring"></div>
+        <div class="banana-glow"></div>
+        <div class="banana-float-wrapper">
+          <button class="banana-btn" id="main-banana" aria-label="点击香蕉赚取收益">
+            <img class="banana-img" src="img/banana.png" alt="🍌" draggable="false">
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <!-- ── 猴子树 Tab（建筑列表）── -->
+    <div class="tab-panel" id="tab-monkey">
+      <div class="buildings-list" id="buildings-list"></div>
+    </div>
+
+    <!-- ── 科技树 Tab ── -->
+    <div class="tab-panel" id="tab-upgrade">
+      <div class="tab-placeholder">
+        <div class="tab-placeholder-icon">🔬</div>
+        <p class="tab-placeholder-title">科技树</p>
+        <p class="tab-placeholder-sub">即将开放</p>
+      </div>
+    </div>
+
+    <!-- ── 世界树 Tab ── -->
+    <div class="tab-panel" id="tab-worldtree">
+      <div class="tab-placeholder">
+        <div class="tab-placeholder-icon">🌲</div>
+        <p class="tab-placeholder-title">世界树</p>
+        <p class="tab-placeholder-sub">即将开放</p>
+      </div>
+    </div>
+
+    <!-- 邮件弹窗 -->
+    <div class="modal-overlay" id="mail-modal">
+      <div class="modal-box mail-box">
+        <div class="mail-modal-header">
+          <span class="mail-modal-title">📮 邮件</span>
+          <button class="mail-modal-close" id="mail-close" type="button">✕</button>
+        </div>
+        <div class="mail-list-scroll" id="mail-list"></div>
+      </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal-overlay" id="settings-modal">
+      <div class="modal-box settings-box">
+        <div class="modal-emoji">⚙️</div>
+        <p class="modal-text">设置</p>
+
+        <div class="settings-username">👤 <span id="stat-username">-</span></div>
+
+        <div class="settings-stats">
+          <div class="stat-row">
+            <span>累计点击</span>
+            <strong id="stat-clicks">0</strong>
+          </div>
+          <div class="stat-row">
+            <span>建筑总数</span>
+            <strong id="stat-buildings">0</strong>
+          </div>
+          <div class="stat-row">
+            <span>总获得香蕉</span>
+            <strong id="stat-total">0</strong>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-audio-section">
+          <div class="settings-toggle-row">
+            <span>背景音乐</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-bgmusic">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-volume-row">
+            <span class="vol-label">🎵 音量</span>
+            <input type="range" class="volume-slider" id="volume-bgmusic" min="0" max="100" step="5">
+            <span class="vol-val" id="volume-bgmusic-val">25%</span>
+          </div>
+          <div class="settings-toggle-row" style="margin-top:10px">
+            <span>点击音效</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-sound">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-volume-row">
+            <span class="vol-label">🔊 音量</span>
+            <input type="range" class="volume-slider" id="volume-click" min="0" max="100" step="5">
+            <span class="vol-val" id="volume-click-val">50%</span>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <button class="btn-reset" id="btn-reset" type="button">🔄 重置游戏</button>
+        <p class="reset-warning" id="reset-warning" style="display:none">再次点击确认重置，3 秒后自动取消</p>
+        <button class="btn-logout" id="btn-logout" type="button">🚪 退出登录</button>
+        <button class="modal-btn-cancel settings-close" id="settings-close" type="button">关闭</button>
+      </div>
+    </div>
+
+    <!-- 离线收益弹窗 -->
+    <div class="modal-overlay" id="offline-modal">
+      <div class="modal-box">
+        <div class="modal-emoji">⏳</div>
+        <p class="modal-text">欢迎回来</p>
+        <p class="modal-offline-desc">你离开了 <strong id="offline-time-text"></strong></p>
+        <p class="modal-offline-amount" id="offline-amount">+0 🍌</p>
+        <button class="modal-btn-full" id="offline-confirm" type="button">收下收益</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="save-indicator" id="save-indicator">💾 已保存</div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-tab="shop" type="button">
+        <span class="nav-icon">🍌</span>
+        <span class="nav-label">香蕉树</span>
+      </button>
+      <button class="nav-btn" data-tab="monkey" type="button">
+        <span class="nav-icon">🐒</span>
+        <span class="nav-label">猴子树</span>
+      </button>
+      <button class="nav-btn" data-tab="upgrade" type="button">
+        <span class="nav-icon">🔬</span>
+        <span class="nav-label">科技树</span>
+      </button>
+      <button class="nav-btn" data-tab="worldtree" type="button">
+        <span class="nav-icon">🌲</span>
+        <span class="nav-label">世界树</span>
+      </button>
+      <button class="nav-btn" data-tab="settings" type="button">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">设置</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js?v=10"></script>
+  <script src="js/config.js?v=10"></script>
+  <script src="js/gameState.js?v=10"></script>
+  <script src="js/gameLogic.js?v=10"></script>
+  <script src="js/ui.js?v=10"></script>
+  <script src="js/storage.js?v=10"></script>
+  <script src="js/main.js?v=10"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+// 游戏静态配置
+const CONFIG = Object.freeze({
+  baseClickValue: 1,
+  buildingPriceGrowth: 1.15,
+
+  buildings: [
+    { id: 'cursor',      name: '小猴子',    emoji: '🖐️', baseCPS: 0.1,             basePrice: 15,                          desc: '灵活敏捷的猴爪，每10秒自动精准点击一次大香蕉。' },
+    { id: 'grandma',     name: '猴子智者',   emoji: '🐵', baseCPS: 1,               basePrice: 100,                         desc: '德高望重的老猴王，精通千年传承的秘制香蕉烘焙技艺。' },
+    { id: 'farm',        name: '猴子农工',   emoji: '🌾', baseCPS: 8,               basePrice: 1100,                        desc: '勤劳朴实的猴子农夫，在花果山的田地里种植各种香蕉作物。' },
+    { id: 'mine',        name: '猴子矿工',   emoji: '⛏️', baseCPS: 47,              basePrice: 12000,                       desc: '身强力壮的猴子矿工，深入地下开采香蕉矿脉。' },
+    { id: 'factory',     name: '猴子员工',   emoji: '🏭', baseCPS: 260,             basePrice: 130000,                      desc: '训练有素的猴子工人，在现代化流水线上高效批量生产香蕉。' },
+    { id: 'bank',        name: '收银猴',     emoji: '💰', baseCPS: 1400,            basePrice: 1400000,                     desc: '精明能干的猴子会计，管理香蕉金库，让存款产生丰厚利息。' },
+    { id: 'temple',      name: '萨满猴',     emoji: '🔮', baseCPS: 7800,            basePrice: 20000000,                    desc: '神秘莫测的猴子萨满，沟通远古香蕉之神，祈求无尽的香蕉祝福。' },
+    { id: 'wizard',      name: '巫师猴',     emoji: '🪄', baseCPS: 44000,           basePrice: 330000000,                   desc: '法力高强的猴子巫师，在高塔中施展古老魔法召唤香蕉。' },
+    { id: 'shipment',    name: '魔法猴',     emoji: '✨', baseCPS: 260000,          basePrice: 5100000000,                  desc: '腾云驾雾的魔法猴子，从遥远的香蕉星球运来最新鲜的香蕉。' },
+    { id: 'alchemy',     name: '炼金术猴',   emoji: '⚗️', baseCPS: 1600000,         basePrice: 75000000000,                 desc: '博学多才的猴子炼金师，掌握将黄金转化为香蕉的禁忌秘术。' },
+    { id: 'portal',      name: '宇航猴',     emoji: '🚀', baseCPS: 10000000,        basePrice: 1000000000000,               desc: '勇敢无畏的猴子宇航员，驾驶飞船穿越传送门探索香蕉宇宙。' },
+    { id: 'timemachine', name: '猴子科学家', emoji: '⏰', baseCPS: 65000000,        basePrice: 14000000000000,              desc: '聪明绝顶的猴子科学家，发明时光机从过去和未来收集香蕉。' },
+    { id: 'antimatter',  name: '爱因斯猴',   emoji: '⚛️', baseCPS: 430000000,       basePrice: 170000000000000,             desc: '最伟大的猴子物理学家，推导出将反物质转化为香蕉的公式。' },
+    { id: 'prism',       name: '哆啦A猴',    emoji: '🌈', baseCPS: 2900000000,      basePrice: 2100000000000000,            desc: '来自22世纪的机器猫猴，用神奇口袋和光线制造无限香蕉。' },
+    { id: 'chancemaker', name: '奥特猴',     emoji: '🌟', baseCPS: 21000000000,     basePrice: 26000000000000000,           desc: '来自M78星云的猴子战士，用光之力量带来源源不断的幸运香蕉。' },
+    { id: 'fractal',     name: '变形猴刚',   emoji: '🔷', baseCPS: 150000000000,    basePrice: 310000000000000000,          desc: '强大的变形金刚猴，能将一块香蕉分裂成无数块相同的香蕉。' },
+    { id: 'javascript',  name: 'java猴',     emoji: '💻', baseCPS: 1100000000000,   basePrice: 71000000000000000000,        desc: '精通编程的猴子程序员，直接从游戏代码中生成海量香蕉。' },
+    { id: 'idleverse',   name: '猴子黑洞',   emoji: '🌌', baseCPS: 8300000000000,   basePrice: 12000000000000000000000,     desc: '吞噬一切的猴子黑洞，劫持其他闲置宇宙的生产并转化为香蕉。' },
+    { id: 'cortex',      name: '六耳猕猴',   emoji: '🐒', baseCPS: 64000000000000,  basePrice: 1900000000000000000000000,   desc: '神通广大的六耳猕猴，能用强大意念将想象中的香蕉变为现实。' },
+    { id: 'you',         name: '美猴王',     emoji: '👑', baseCPS: 510000000000000, basePrice: 310000000000000000000000000, desc: '齐天大圣孙悟空，所有猴子的领袖，是这一切香蕉奇迹的缔造者。' },
+  ],
+
+  saveVersion: 3,
+  mailInboxLimit: 50,
+
+  bananaStyles: [
+    { id: 'yellow', name: '黄香蕉', emoji: '🍌', cssClass: '',           price: 0 },
+    { id: 'green',  name: '青香蕉', emoji: '🍌', cssClass: 'style-green', price: 500 },
+    { id: 'red',    name: '红香蕉', emoji: '🍌', cssClass: 'style-red',   price: 2000 },
+    { id: 'blue',   name: '蓝香蕉', emoji: '🍌', cssClass: 'style-blue',  price: 10000 },
+  ],
+});

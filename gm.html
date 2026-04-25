@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GM 后台 · 猴哥传奇</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+      background: linear-gradient(160deg, #1C0900 0%, #3A1800 60%, #2A1000 100%);
+      min-height: 100%;
+      color: #F5E6CC;
+      overflow-x: hidden;
+    }
+
+    /* ── 顶栏 ── */
+    .gm-header {
+      position: sticky;
+      top: 0;
+      background: rgba(12, 5, 0, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 160, 0, 0.18);
+    }
+
+    .gm-brand { display: flex; flex-direction: column; }
+
+    .gm-brand-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #FFB300;
+      letter-spacing: -0.3px;
+    }
+
+    .gm-brand-sub {
+      font-size: 10px;
+      color: rgba(255, 180, 80, 0.5);
+      margin-top: 1px;
+      letter-spacing: 0.5px;
+    }
+
+    .gm-header-logout {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 220, 140, 0.85);
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .gm-header-logout:active { background: rgba(255,255,255,0.14); }
+
+    /* ── 内容区 ── */
+    .gm-content {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px 50px;
+    }
+
+    /* ── 卡片 ── */
+    .gm-card {
+      background: rgba(255, 240, 200, 0.05);
+      border: 1px solid rgba(255, 160, 0, 0.16);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+
+    .gm-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFB300;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── 登录卡片 ── */
+    .gm-login-hero {
+      font-size: 32px;
+      font-weight: 900;
+      color: #FFB300;
+      margin-bottom: 6px;
+    }
+
+    .gm-login-desc {
+      font-size: 13px;
+      color: rgba(255, 200, 120, 0.6);
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    /* ── 表单 ── */
+    .gm-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255, 180, 80, 0.65);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      margin-bottom: 7px;
+      margin-top: 14px;
+    }
+
+    .gm-label:first-child { margin-top: 0; }
+
+    .gm-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 160, 0, 0.22);
+      border-radius: 12px;
+      color: #F5E6CC;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      -webkit-user-select: auto;
+      user-select: auto;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .gm-input:focus {
+      border-color: rgba(255, 160, 0, 0.6);
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    .gm-input::placeholder {
+      color: rgba(255, 200, 120, 0.28);
+    }
+
+    .gm-input[readonly] {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .gm-textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    /* ── 按钮 ── */
+    .gm-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 18px;
+      border-radius: 13px;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.12s;
+      font-family: inherit;
+    }
+
+    .gm-btn:active { transform: scale(0.95); }
+
+    .gm-btn-primary {
+      background: linear-gradient(135deg, #FFB300, #FF8000);
+      color: white;
+      box-shadow: 0 4px 14px rgba(255, 130, 0, 0.35);
+    }
+
+    .gm-btn-secondary {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #F5E6CC;
+    }
+
+    .gm-btn-danger {
+      background: rgba(200, 40, 40, 0.75);
+      border: 1px solid rgba(220, 60, 60, 0.4);
+      color: white;
+    }
+
+    .gm-btn-full {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .gm-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .gm-btn-row .gm-btn { flex: 1; }
+
+    /* ── 发送目标切换 ── */
+    .gm-target-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .gm-target-opt {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 11px;
+      border: 1.5px solid rgba(255, 160, 0, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 200, 120, 0.55);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .gm-target-opt.active {
+      border-color: #FFB300;
+      background: rgba(255, 179, 0, 0.14);
+      color: #FFB300;
+    }
+
+    /* ── 玩家数据展示 ── */
+    .gm-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .gm-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      font-size: 13px;
+      color: rgba(255, 200, 120, 0.65);
+    }
+
+    .gm-stat-row strong {
+      color: #FFD060;
+      font-weight: 700;
+    }
+
+    .gm-stat-block {
+      padding: 10px 13px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      font-size: 12px;
+      color: rgba(255, 200, 120, 0.55);
+      line-height: 1.6;
+    }
+
+    .gm-empty {
+      text-align: center;
+      color: rgba(255, 200, 120, 0.35);
+      padding: 18px;
+      font-size: 13px;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(20, 8, 0, 0.9);
+      color: #FFD080;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 9999;
+      border: 1px solid rgba(255, 160, 0, 0.2);
+    }
+
+    #toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── 响应式 ── */
+    @media (max-width: 540px) {
+      .gm-content { padding: 16px 12px 50px; }
+      .gm-login-hero { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="gm-header">
+    <div class="gm-brand">
+      <div class="gm-brand-name">🍌 GM 后台</div>
+      <div class="gm-brand-sub">猴哥传奇 · 管理员控制台</div>
+    </div>
+    <button class="gm-header-logout" id="gm-logout" style="display:none" type="button">退出后台</button>
+  </header>
+
+  <div class="gm-content">
+
+    <!-- 登录区 -->
+    <div class="gm-card" id="gm-login-section">
+      <div class="gm-login-hero">管理员登录</div>
+      <div class="gm-login-desc">只有管理员可访问，登录后可查看玩家数据、发送邮件与重置进度。</div>
+      <label class="gm-label">管理员账号</label>
+      <input class="gm-input" id="gm-username" type="text" value="haohao" readonly>
+      <label class="gm-label">管理员密码</label>
+      <input class="gm-input" id="gm-password" type="password" placeholder="输入密码">
+      <button class="gm-btn gm-btn-primary gm-btn-full" id="gm-login-page-btn" type="button">登录后台</button>
+    </div>
+
+    <!-- 操作面板 -->
+    <div id="gm-page-panel" style="display:none">
+
+      <!-- 玩家查询 -->
+      <div class="gm-card">
+        <div class="gm-card-title">🔍 玩家查询</div>
+        <input class="gm-input" id="gm-target-user" type="text" placeholder="输入玩家用户名">
+        <div class="gm-btn-row">
+          <button class="gm-btn gm-btn-secondary" id="gm-load-player" type="button">查看数据</button>
+          <button class="gm-btn gm-btn-danger" id="gm-reset-player" type="button">重置进度</button>
+        </div>
+        <div class="gm-stats" id="gm-stats"></div>
+      </div>
+
+      <!-- 发送邮件 -->
+      <div class="gm-card">
+        <div class="gm-card-title">📮 发送邮件</div>
+
+        <div class="gm-target-row">
+          <button class="gm-target-opt active" id="gm-target-single" type="button">指定玩家</button>
+          <button class="gm-target-opt" id="gm-target-all" type="button">全部玩家</button>
+        </div>
+
+        <label class="gm-label">邮件标题</label>
+        <input class="gm-input" id="gm-mail-subject" type="text" placeholder="邮件标题">
+
+        <label class="gm-label">邮件内容</label>
+        <textarea class="gm-input gm-textarea" id="gm-mail-body" placeholder="邮件内容"></textarea>
+
+        <label class="gm-label">香蕉附件（数量）</label>
+        <input class="gm-input" id="gm-mail-banana" type="number" min="0" placeholder="0">
+
+        <label class="gm-label">物品 ID（可选）</label>
+        <input class="gm-input" id="gm-mail-item" type="text" placeholder="物品 ID">
+
+        <label class="gm-label">物品数量（可选）</label>
+        <input class="gm-input" id="gm-mail-item-count" type="number" min="0" placeholder="0">
+
+        <button class="gm-btn gm-btn-primary gm-btn-full" id="gm-send-mail" type="button">发送邮件</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="js/gm.js"></script>
+</body>
+</html>
