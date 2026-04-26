@@ -393,6 +393,7 @@ function bootstrapPlayerSession() {
   applyOfflineEarningsIfNeeded();
   checkBuildingUnlocks();
   renderBuildings();
+  renderUpgrades();
   renderMonkeysAroundBanana();
   updateTopBar();
   renderMailList();
@@ -421,10 +422,14 @@ function gameLoop(timestamp) {
   updateTopBar();
   updateBuildingAffordability();
 
+  updateUpgradeAffordability();
+
   unlockCheckTimer += deltaSeconds;
   if (unlockCheckTimer >= 1) {
     unlockCheckTimer = 0;
     checkBuildingUnlocks();
+    const upgradeTab = document.getElementById('tab-upgrade');
+    if (upgradeTab && upgradeTab.classList.contains('active')) renderUpgrades();
   }
 
   cursorClickTimer = 0;
@@ -443,9 +448,105 @@ function handleBananaClick(event) {
   if (!gameState.isAuthenticated) { openAuthModal(); return; }
   const result = processBananaClick();
   spawnFloatingBanana(event.clientX, event.clientY, result.isCrit);
+  spawnClickValueText(event.clientX, event.clientY, result.value, result.isCrit);
   playClickAnimation(result.isCrit);
   playClickSound();
   updateTopBar();
+}
+
+// ─── 科技树 ────────────────────────────────────────
+
+let selectedUpgradeId = null;
+
+function getUpgradeState(u) {
+  if (gameState.upgradePurchased[u.id]) return 'owned';
+  if (gameState.totalBananasEarned < u.unlockAt) return 'hidden';
+  if (gameState.bananaCount >= u.cost) return 'available';
+  return 'locked';
+}
+
+function renderUpgrades() {
+  const grid = document.getElementById('upgrade-grid');
+  if (!grid) return;
+
+  const icons = CONFIG.upgrades.map(u => {
+    const state = getUpgradeState(u);
+    if (state === 'hidden') return '';
+    const sel = u.id === selectedUpgradeId ? ' selected' : '';
+    return `<button class="upgrade-icon upgrade-${state}${sel}" data-id="${u.id}" type="button" aria-label="${u.name}">
+      <span class="upgrade-emoji">${u.emoji}</span>
+      ${state === 'owned' ? '<span class="upgrade-check">✓</span>' : ''}
+    </button>`;
+  }).join('');
+
+  grid.innerHTML = icons || '<div class="upgrade-empty">继续收集香蕉以解锁科技</div>';
+  grid.querySelectorAll('.upgrade-icon[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => handleUpgradeIconClick(btn.dataset.id));
+  });
+  updateUpgradeDetail();
+}
+
+function handleUpgradeIconClick(id) {
+  selectedUpgradeId = (selectedUpgradeId === id) ? null : id;
+  renderUpgrades();
+}
+
+function updateUpgradeDetail() {
+  const panel = document.getElementById('upgrade-detail');
+  if (!panel) return;
+
+  if (!selectedUpgradeId) {
+    panel.innerHTML = '<div class="upgrade-detail-hint">点击科技图标查看详情</div>';
+    return;
+  }
+  const u = CONFIG.upgrades.find(u => u.id === selectedUpgradeId);
+  if (!u) return;
+  const state   = getUpgradeState(u);
+  const isOwned = state === 'owned';
+  const canBuy  = state === 'available';
+  const catLabel = u.category === 'click' ? '点击力' : '产速';
+
+  panel.innerHTML = `
+    <div class="upgrade-detail-inner">
+      <div class="upgrade-detail-head">
+        <span class="upgrade-detail-emoji">${u.emoji}</span>
+        <div class="upgrade-detail-info">
+          <div class="upgrade-detail-name">${u.name} <span class="upgrade-cat-badge">${catLabel}</span></div>
+          <div class="upgrade-detail-effect">${u.desc}</div>
+        </div>
+      </div>
+      ${isOwned
+        ? '<div class="upgrade-detail-owned">✓ 已拥有</div>'
+        : `<div class="upgrade-detail-cost">${canBuy ? '💰' : '🔒'} 需要 ${formatNumber(u.cost)} 🍌</div>
+           <button class="upgrade-buy-btn${canBuy ? ' can-buy' : ''}" data-id="${u.id}" ${canBuy ? '' : 'disabled'} type="button">
+             ${canBuy ? '购买' : '余额不足'}
+           </button>`
+      }
+    </div>`;
+
+  const buyBtn = panel.querySelector('.upgrade-buy-btn[data-id]');
+  if (buyBtn) {
+    buyBtn.addEventListener('click', () => {
+      if (buyUpgrade(buyBtn.dataset.id)) {
+        selectedUpgradeId = null;
+        saveGame();
+        renderUpgrades();
+        updateTopBar();
+        showToast(`🔬 ${u.name} 已解锁！`);
+      }
+    });
+  }
+}
+
+function updateUpgradeAffordability() {
+  document.querySelectorAll('.upgrade-icon[data-id]').forEach(btn => {
+    const id = btn.dataset.id;
+    const u  = CONFIG.upgrades.find(u => u.id === id);
+    if (!u) return;
+    const state = getUpgradeState(u);
+    const sel   = id === selectedUpgradeId ? ' selected' : '';
+    btn.className = `upgrade-icon upgrade-${state}${sel}`;
+  });
 }
 
 // ─── 设置弹窗 ──────────────────────────────────────

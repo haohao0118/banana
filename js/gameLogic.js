@@ -26,13 +26,36 @@ function recalcProductionRate() {
   CONFIG.buildings.forEach((b, i) => {
     total += b.baseCPS * (gameState.buildingCounts[i] || 0);
   });
-  gameState.productionRate = total;
+  let mult = 1;
+  CONFIG.upgrades.forEach(u => {
+    if (gameState.upgradePurchased[u.id] && u.effect.type === 'cps_mult') {
+      mult *= u.effect.value;
+    }
+  });
+  gameState.productionRate = total * mult;
+}
+
+function buyUpgrade(id) {
+  const u = CONFIG.upgrades.find(u => u.id === id);
+  if (!u || gameState.upgradePurchased[id]) return false;
+  if (gameState.bananaCount < u.cost) return false;
+  if (gameState.totalBananasEarned < u.unlockAt) return false;
+  gameState.bananaCount -= u.cost;
+  gameState.upgradePurchased[id] = true;
+  recalcProductionRate();
+  return true;
 }
 
 // ─── 点击 ──────────────────────────────────────────
 
 function getClickValue() {
-  return 1;
+  let val = CONFIG.baseClickValue;
+  CONFIG.upgrades.forEach(u => {
+    if (gameState.upgradePurchased[u.id] && u.effect.type === 'click_mult') {
+      val *= u.effect.value;
+    }
+  });
+  return val;
 }
 
 function processBananaClick() {

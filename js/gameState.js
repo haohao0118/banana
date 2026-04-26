@@ -18,6 +18,8 @@ const gameState = {
   mails: [],
   unreadMailCount: 0,
 
+  upgradePurchased: {},
+
   selectedBananaStyle: 0,
   lastSaveTime:  Date.now(),
   lastLoginTime: Date.now(),

@@ -22,6 +22,7 @@ function createDefaultSaveData() {
     productionRate: 0,
     buildingCounts: new Array(20).fill(0),
     buildingUnlocked: new Array(20).fill(false).map((_, i) => i < 1),
+    upgradePurchased: {},
     mails: [], unreadMailCount: 0,
     selectedBananaStyle: 0,
     lastSaveTime: Date.now(), lastLoginTime: Date.now(),
@@ -73,6 +74,10 @@ function normalizeSaveData(raw) {
     return Boolean(rawUnlocked[i]);
   });
 
+  const rawUpgrades = (raw.upgradePurchased && typeof raw.upgradePurchased === 'object') ? raw.upgradePurchased : {};
+  const upgradePurchased = {};
+  CONFIG.upgrades.forEach(u => { if (rawUpgrades[u.id] === true) upgradePurchased[u.id] = true; });
+
   const mails = Array.isArray(raw.mails)
     ? raw.mails.map(normalizeMail).filter(Boolean).slice(0, CONFIG.mailInboxLimit)
     : [];
@@ -84,6 +89,7 @@ function normalizeSaveData(raw) {
     productionRate:     Math.max(0, Number(raw.productionRate)     || 0),
     buildingCounts,
     buildingUnlocked,
+    upgradePurchased,
     mails,
     unreadMailCount: Number(raw.unreadMailCount) || mails.filter(m => !m.claimed).length,
     selectedBananaStyle: Math.max(0, Math.min(
@@ -102,6 +108,7 @@ function applySaveDataToGameState(data) {
   gameState.productionRate     = save.productionRate;
   gameState.buildingCounts     = save.buildingCounts;
   gameState.buildingUnlocked   = save.buildingUnlocked;
+  gameState.upgradePurchased   = save.upgradePurchased;
   gameState.mails              = save.mails;
   gameState.unreadMailCount    = save.unreadMailCount;
   gameState.selectedBananaStyle = save.selectedBananaStyle;
@@ -119,6 +126,7 @@ function collectSaveDataFromGameState() {
     productionRate:     gameState.productionRate,
     buildingCounts:     [...gameState.buildingCounts],
     buildingUnlocked:   [...gameState.buildingUnlocked],
+    upgradePurchased:   { ...gameState.upgradePurchased },
     mails:              gameState.mails,
     unreadMailCount:    gameState.unreadMailCount,
     selectedBananaStyle: gameState.selectedBananaStyle,

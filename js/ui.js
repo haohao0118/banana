@@ -53,6 +53,21 @@ function spawnFloatingBanana(clientX, clientY, isCrit) {
   el.addEventListener('animationend', () => el.remove(), { once: true });
 }
 
+// ─── 浮动点击数值 ─────────────────────────────────
+
+function spawnClickValueText(clientX, clientY, value, isCrit) {
+  const wrapper = document.querySelector('.game-wrapper');
+  const rect    = wrapper.getBoundingClientRect();
+  const el      = document.createElement('div');
+  el.className  = 'floating-click-val' + (isCrit ? ' crit' : '');
+  el.textContent = '+' + formatNumber(value);
+  const drift   = (Math.random() - 0.5) * 50;
+  el.style.left = (clientX - rect.left + drift) + 'px';
+  el.style.top  = (clientY - rect.top  - 22) + 'px';
+  wrapper.appendChild(el);
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+}
+
 // ─── 香蕉点击动画 ─────────────────────────────────
 
 function playClickAnimation(isCrit) {

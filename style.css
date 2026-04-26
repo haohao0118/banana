@@ -241,7 +241,7 @@ body {
 }
 
 .banana-img {
-  width: clamp(340px, 96vw, 500px);
+  width: clamp(380px, 100vw, 560px);
   height: auto;
   display: block;
   image-rendering: pixelated;
@@ -721,7 +721,7 @@ body {
    ============================================ */
 .floating-banana {
   position: absolute;
-  font-size: 15px;
+  font-size: 20px;
   line-height: 1;
   pointer-events: none;
   z-index: 99;
@@ -729,7 +729,7 @@ body {
 }
 
 .floating-banana.crit {
-  font-size: 26px;
+  font-size: 28px;
   filter: drop-shadow(0 0 8px rgba(220, 255, 0, 0.95))
           drop-shadow(0 0 16px rgba(150, 255, 0, 0.7));
   animation: floatBananaCrit 1s ease-out forwards;
@@ -752,6 +752,26 @@ body {
   100% { transform: translateY(-115px) scale(0.7);  opacity: 0; }
 }
 
+/* 浮动点击数值 */
+.floating-click-val {
+  position: absolute;
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255,215,0,0.6), 0 1px 3px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 98;
+  white-space: nowrap;
+  animation: floatBananaUp 0.9s ease-out forwards;
+}
+
+.floating-click-val.crit {
+  font-size: 28px;
+  color: #FFF500;
+  text-shadow: 0 0 12px rgba(255,255,0,0.9), 0 1px 3px rgba(0,0,0,0.8);
+  animation: floatBananaCrit 1s ease-out forwards;
+}
+
 /* ============================================
    响应式
    ============================================ */
@@ -770,7 +790,7 @@ body {
 
 @media (max-height: 680px) {
   .banana-img {
-    width: clamp(240px, 70vw, 360px);
+    width: clamp(270px, 78vw, 390px);
   }
   .click-area {
     padding: 8px 20px 6px;
@@ -1884,3 +1904,207 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ============================================
+   科技树
+   ============================================ */
+.upgrade-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.upgrade-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 10px 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(60,140,40,0.7) rgba(0,15,0,0.5);
+}
+
+.upgrade-scroll::-webkit-scrollbar { width: 5px; }
+.upgrade-scroll::-webkit-scrollbar-track { background: rgba(0,15,0,0.55); border-radius: 3px; }
+.upgrade-scroll::-webkit-scrollbar-thumb { background: rgba(60,140,40,0.72); border-radius: 3px; }
+
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.upgrade-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6A9A50;
+  font-size: 13px;
+  padding: 32px 0;
+}
+
+/* 科技图标 */
+.upgrade-icon {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  background: none;
+  font-family: inherit;
+  transition: transform 0.1s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.upgrade-icon:active { transform: scale(0.88); }
+
+.upgrade-emoji {
+  font-size: clamp(24px, 8vw, 34px);
+  line-height: 1;
+}
+
+.upgrade-check {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #80C840;
+}
+
+/* 状态：可见但买不起 */
+.upgrade-icon.upgrade-locked {
+  border-color: rgba(50,100,30,0.4);
+  background: rgba(5,20,5,0.7);
+  filter: grayscale(0.65) brightness(0.7);
+}
+
+/* 状态：买得起 */
+.upgrade-icon.upgrade-available {
+  border-color: rgba(100,220,60,0.85);
+  background: rgba(20,60,10,0.85);
+  box-shadow: 0 0 10px rgba(80,200,40,0.3);
+  animation: affordPulse 2s ease-in-out infinite;
+}
+
+/* 状态：已拥有 */
+.upgrade-icon.upgrade-owned {
+  border-color: rgba(50,100,30,0.35);
+  background: rgba(5,20,5,0.5);
+  filter: grayscale(0.55) brightness(0.6);
+  cursor: default;
+}
+
+/* 选中态 */
+.upgrade-icon.selected {
+  outline: 2px solid rgba(180,255,80,0.9);
+  outline-offset: 2px;
+}
+
+/* 详情面板 */
+.upgrade-detail-panel {
+  flex-shrink: 0;
+  min-height: 110px;
+  background: rgba(3,15,5,0.92);
+  border-top: 2px solid rgba(80,160,50,0.35);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upgrade-detail-hint {
+  color: #4A7030;
+  font-size: 13px;
+  text-align: center;
+}
+
+.upgrade-detail-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upgrade-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upgrade-detail-emoji {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.upgrade-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upgrade-detail-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #C8F080;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.upgrade-cat-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFD700;
+  background: rgba(255,215,0,0.15);
+  border: 1px solid rgba(255,215,0,0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.upgrade-detail-effect {
+  font-size: 12px;
+  color: #A8D880;
+  margin-top: 2px;
+}
+
+.upgrade-detail-cost {
+  font-size: 13px;
+  color: #6A9A50;
+  font-weight: 600;
+}
+
+.upgrade-detail-owned {
+  font-size: 14px;
+  font-weight: 700;
+  color: #80C840;
+}
+
+.upgrade-buy-btn {
+  width: 100%;
+  padding: 9px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(80,160,50,0.35);
+  background: rgba(20,60,10,0.5);
+  color: #6A9A50;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: default;
+  font-family: inherit;
+  transition: transform 0.1s;
+}
+
+.upgrade-buy-btn.can-buy {
+  border-color: rgba(100,220,60,0.85);
+  background: linear-gradient(135deg, #4A9A20, #2A6A10);
+  color: #D0FF88;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(80,200,40,0.35);
+}
+
+.upgrade-buy-btn.can-buy:active { transform: scale(0.96); }

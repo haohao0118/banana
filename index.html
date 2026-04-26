@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>猴哥传奇</title>
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=12">
   <link rel="preload" href="img/bg.png" as="image">
   <link rel="preload" href="img/banana.png" as="image">
 </head>
@@ -71,10 +71,13 @@
 
     <!-- ── 科技树 Tab ── -->
     <div class="tab-panel" id="tab-upgrade">
-      <div class="tab-placeholder">
-        <div class="tab-placeholder-icon">🔬</div>
-        <p class="tab-placeholder-title">科技树</p>
-        <p class="tab-placeholder-sub">即将开放</p>
+      <div class="upgrade-wrap">
+        <div class="upgrade-scroll">
+          <div class="upgrade-grid" id="upgrade-grid"></div>
+        </div>
+        <div class="upgrade-detail-panel" id="upgrade-detail">
+          <div class="upgrade-detail-hint">点击科技图标查看详情</div>
+        </div>
       </div>
     </div>
 
@@ -198,12 +201,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js?v=11"></script>
-  <script src="js/config.js?v=11"></script>
-  <script src="js/gameState.js?v=11"></script>
-  <script src="js/gameLogic.js?v=11"></script>
-  <script src="js/ui.js?v=11"></script>
-  <script src="js/storage.js?v=11"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/supabase-config.js?v=12"></script>
+  <script src="js/config.js?v=12"></script>
+  <script src="js/gameState.js?v=12"></script>
+  <script src="js/gameLogic.js?v=12"></script>
+  <script src="js/ui.js?v=12"></script>
+  <script src="js/storage.js?v=12"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>
