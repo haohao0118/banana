@@ -35,7 +35,7 @@ function showToast(msg) {
 // ─── Netlify 函数调用 ─────────────────────────────
 
 async function gmFetch(action, params = {}) {
-  const res = await fetch('/.netlify/functions/gm-api', {
+  const res = await fetch('/gm-api', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, password: gmPassword, ...params }),
