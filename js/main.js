@@ -173,7 +173,6 @@ function renderBuildings() {
             <div class="building-emoji">${b.emoji}</div>
             <span class="building-name">${b.name}</span>
             ${owned > 0 ? `<span class="building-count">${owned}</span>` : ''}
-            ${canAfford && !isExpanded ? '<span class="building-afford-dot"></span>' : ''}
             <span class="building-expand-icon">▶</span>
           </div>
           ${bodyHtml}
@@ -227,8 +226,6 @@ function updateBuildingAffordability() {
     row.classList.toggle('affordable-row', canAfford);
     const btn = row.querySelector('.building-buy-btn');
     if (btn) btn.classList.toggle('affordable', canAfford);
-    const dot = row.querySelector('.building-afford-dot');
-    if (dot) dot.style.display = (canAfford && !row.classList.contains('expanded')) ? '' : 'none';
   });
 }
 

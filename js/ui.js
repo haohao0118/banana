@@ -45,9 +45,9 @@ function spawnFloatingBanana(clientX, clientY, isCrit) {
     + (style.cssClass ? ' ' + style.cssClass : '');
   el.textContent = style.emoji;
 
-  // 随机方向：水平 ±60px，竖直向上 40~110px，略带左右偏移
+  // 随机方向：水平 ±60px，竖直向下 40~110px
   const dx = (Math.random() - 0.5) * 120;
-  const dy = -(Math.random() * 70 + 40);
+  const dy = (Math.random() * 70 + 40);
   el.style.setProperty('--fb-dx', dx + 'px');
   el.style.setProperty('--fb-dy', dy + 'px');
   el.style.left = (clientX - rect.left - 12) + 'px';
