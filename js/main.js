@@ -141,9 +141,15 @@ function renderBuildings() {
       const price     = getBuildingPrice(i);
       const totalCPS  = getBuildingTotalCPS(i);
       const canAfford = gameState.bananaCount >= price;
-      const cpsLine   = owned > 0
-        ? `+${formatRate(totalCPS)} 🍌/秒`
-        : `单个 ${b.baseCPS < 1 ? b.baseCPS.toFixed(1) : formatNumber(b.baseCPS)} 🍌/秒`;
+      let cpsLine;
+      if (owned > 0) {
+        const totalRate = gameState.productionRate || 0;
+        const pct = totalRate > 0 ? Math.round(totalCPS / totalRate * 100) : 0;
+        const perUnit = b.baseCPS < 1 ? b.baseCPS.toFixed(2) : formatNumber(b.baseCPS);
+        cpsLine = `每只 ${perUnit}/s · ${owned}只合计 +${formatRate(totalCPS)}/s（占 ${pct}%）`;
+      } else {
+        cpsLine = `单个 ${b.baseCPS < 1 ? b.baseCPS.toFixed(1) : formatNumber(b.baseCPS)} 🍌/秒`;
+      }
       rows.push(`
         <div class="building-row${canAfford ? ' affordable-row' : ''}" data-building="${i}">
           <div class="building-emoji">${b.emoji}</div>
@@ -210,6 +216,16 @@ function updateBuildingAffordability() {
 
 // ─── 建筑解锁检测（每秒一次）────────────────────────
 
+let _unlockPopupTimer = null;
+function showUnlockPopup(b) {
+  const el = document.getElementById('unlock-popup');
+  if (!el) return;
+  el.textContent = `🎉 新角色解锁：${b.emoji} ${b.name}`;
+  el.classList.add('visible');
+  if (_unlockPopupTimer) clearTimeout(_unlockPopupTimer);
+  _unlockPopupTimer = setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
 function checkBuildingUnlocks() {
   let changed = false;
   CONFIG.buildings.forEach((b, i) => {
@@ -217,6 +233,7 @@ function checkBuildingUnlocks() {
     if (!gameState.buildingUnlocked[i] && gameState.totalBananasEarned >= b.basePrice) {
       gameState.buildingUnlocked[i] = true;
       changed = true;
+      showUnlockPopup(b);
     }
   });
   if (changed) renderBuildings();
@@ -410,15 +427,7 @@ function gameLoop(timestamp) {
     checkBuildingUnlocks();
   }
 
-  if (gameState.buildingCounts[0] > 0) {
-    cursorClickTimer += deltaSeconds;
-    if (cursorClickTimer >= 10) {
-      cursorClickTimer = 0;
-      triggerCursorClickVisual();
-    }
-  } else {
-    cursorClickTimer = 0;
-  }
+  cursorClickTimer = 0;
 
   autoSaveTimer += deltaSeconds;
   if (autoSaveTimer >= AUTO_SAVE_INTERVAL) {

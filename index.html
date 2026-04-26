@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>猴哥传奇</title>
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="preload" href="img/bg.png" as="image">
+  <link rel="preload" href="img/banana.png" as="image">
 </head>
 <body>
   <div class="game-wrapper">
@@ -52,6 +54,7 @@
       </button>
       <main class="click-area">
         <div id="monkey-ring" class="monkey-ring"></div>
+        <div id="unlock-popup" class="unlock-popup"></div>
         <div class="banana-glow"></div>
         <div class="banana-float-wrapper">
           <button class="banana-btn" id="main-banana" aria-label="点击香蕉赚取收益">
@@ -195,12 +198,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js?v=10"></script>
-  <script src="js/config.js?v=10"></script>
-  <script src="js/gameState.js?v=10"></script>
-  <script src="js/gameLogic.js?v=10"></script>
-  <script src="js/ui.js?v=10"></script>
-  <script src="js/storage.js?v=10"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/supabase-config.js?v=11"></script>
+  <script src="js/config.js?v=11"></script>
+  <script src="js/gameState.js?v=11"></script>
+  <script src="js/gameLogic.js?v=11"></script>
+  <script src="js/ui.js?v=11"></script>
+  <script src="js/storage.js?v=11"></script>
+  <script src="js/main.js?v=11"></script>
 </body>
 </html>
