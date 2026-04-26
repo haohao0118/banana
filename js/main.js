@@ -398,6 +398,7 @@ function bootstrapPlayerSession() {
   updateTopBar();
   renderMailList();
   updateMailBadge();
+  updateTutorial();
   saveGame();
   if (!gameLoopStarted) {
     gameLoopStarted = true;
@@ -428,6 +429,7 @@ function gameLoop(timestamp) {
   if (unlockCheckTimer >= 1) {
     unlockCheckTimer = 0;
     checkBuildingUnlocks();
+    updateTutorial();
     const upgradeTab = document.getElementById('tab-upgrade');
     if (upgradeTab && upgradeTab.classList.contains('active')) renderUpgrades();
   }
@@ -547,6 +549,32 @@ function updateUpgradeAffordability() {
     const sel   = id === selectedUpgradeId ? ' selected' : '';
     btn.className = `upgrade-icon upgrade-${state}${sel}`;
   });
+}
+
+// ─── 新手引导 ──────────────────────────────────────
+
+function updateTutorial() {
+  const el = document.getElementById('tutorial-hint');
+  if (!el) return;
+
+  const monkeys    = gameState.buildingCounts[0] || 0;
+  const hasUpgrade = Object.values(gameState.upgradePurchased).some(Boolean);
+
+  if (hasUpgrade) { el.classList.remove('visible'); return; }
+
+  let text;
+  if (monkeys === 0 && gameState.totalBananasEarned < 15) {
+    text = '👆 点击香蕉赚取香蕉！';
+  } else if (monkeys === 0) {
+    text = '🐒 去猴子树，买一只小猴子（15 🍌）';
+  } else if (gameState.totalBananasEarned < 100) {
+    text = '✨ 继续点击，凑够 100 🍌';
+  } else {
+    text = '🔬 去科技树购买第一个升级（100 🍌）';
+  }
+
+  el.textContent = text;
+  el.classList.add('visible');
 }
 
 // ─── 设置弹窗 ──────────────────────────────────────
