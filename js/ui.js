@@ -45,9 +45,16 @@ function spawnFloatingBanana(clientX, clientY, isCrit) {
     + (style.cssClass ? ' ' + style.cssClass : '');
   el.textContent = style.emoji;
 
-  const drift = (Math.random() - 0.5) * 28;
-  el.style.left = (clientX - rect.left - 10 + drift) + 'px';
-  el.style.top  = (clientY - rect.top  - 10) + 'px';
+  // 随机方向：水平 ±60px，竖直向上 40~110px，略带左右偏移
+  const dx = (Math.random() - 0.5) * 120;
+  const dy = -(Math.random() * 70 + 40);
+  el.style.setProperty('--fb-dx', dx + 'px');
+  el.style.setProperty('--fb-dy', dy + 'px');
+  el.style.left = (clientX - rect.left - 12) + 'px';
+  el.style.top  = (clientY - rect.top  - 12) + 'px';
+  el.style.animation = isCrit
+    ? 'floatBananaCrit 1s ease-out forwards'
+    : 'floatBananaRandom 0.9s ease-out forwards';
 
   wrapper.appendChild(el);
   el.addEventListener('animationend', () => el.remove(), { once: true });

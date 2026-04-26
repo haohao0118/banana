@@ -89,26 +89,27 @@ function stopBgMusic() {
 
 function scheduleBgNotes() {
   if (!bgMusicRunning || !bgMasterGain) return;
-  const ahead = 2.0, interval = 1.1;
+  const ahead = 2.0, interval = 1.3;
   while (bgNextNoteTime < audioCtx.currentTime + ahead) {
     const freq = BG_NOTES[BG_PATTERN[bgNoteIdx % BG_PATTERN.length]];
     bgNoteIdx++;
     const osc  = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'sine';
+    osc.type = 'triangle'; // 比 sine 更柔和，不易破音
     osc.frequency.value = freq;
     osc.connect(gain);
     gain.connect(bgMasterGain);
-    const t = bgNextNoteTime, dur = interval * 1.9;
+    // 全程线性渐变，消除突变点击声
+    const t = bgNextNoteTime, dur = interval * 1.6;
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.22, t + 0.3);
-    gain.gain.setValueAtTime(0.14, t + dur - 0.6);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.25); // 缓攻（降低峰值防叠音）
+    gain.gain.linearRampToValueAtTime(0.07, t + dur - 0.4); // 缓降
     gain.gain.linearRampToValueAtTime(0, t + dur);
     osc.start(t);
     osc.stop(t + dur);
     bgNextNoteTime += interval;
   }
-  bgScheduleTimer = setTimeout(scheduleBgNotes, 600);
+  bgScheduleTimer = setTimeout(scheduleBgNotes, 700);
 }
 
 function setBgMusicVolume(vol) {
@@ -124,7 +125,9 @@ function switchTab(tab) {
   if (panel) panel.classList.add('active');
 }
 
-// ─── 建筑列表渲染 ──────────────────────────────────
+// ─── 建筑列表渲染（手风琴）────────────────────────────
+
+let expandedBuildingIdx = null;
 
 function renderBuildings() {
   const list = document.getElementById('buildings-list');
@@ -134,61 +137,74 @@ function renderBuildings() {
   let lockedShown = 0;
 
   CONFIG.buildings.forEach((b, i) => {
-    const owned    = gameState.buildingCounts[i] || 0;
-    const unlocked = gameState.buildingUnlocked[i] || owned > 0;
+    const owned      = gameState.buildingCounts[i] || 0;
+    const unlocked   = gameState.buildingUnlocked[i] || owned > 0;
+    const isExpanded = expandedBuildingIdx === i;
 
     if (unlocked) {
       const price     = getBuildingPrice(i);
-      const totalCPS  = getBuildingTotalCPS(i);
       const canAfford = gameState.bananaCount >= price;
-      let cpsLine;
-      if (owned > 0) {
-        const totalRate = gameState.productionRate || 0;
-        const pct = totalRate > 0 ? Math.round(totalCPS / totalRate * 100) : 0;
-        const perUnit = b.baseCPS < 1 ? b.baseCPS.toFixed(2) : formatNumber(b.baseCPS);
-        cpsLine = `每只 ${perUnit}/s · ${owned}只合计 +${formatRate(totalCPS)}/s（占 ${pct}%）`;
-      } else {
-        cpsLine = `单个 ${b.baseCPS < 1 ? b.baseCPS.toFixed(1) : formatNumber(b.baseCPS)} 🍌/秒`;
-      }
-      rows.push(`
-        <div class="building-row${canAfford ? ' affordable-row' : ''}" data-building="${i}">
-          <div class="building-emoji">${b.emoji}</div>
-          <div class="building-info">
-            <div class="building-name-row">
-              <span class="building-name">${b.name}</span>
-              ${owned > 0 ? `<span class="building-count">x${owned}</span>` : ''}
-            </div>
+
+      let bodyHtml = '';
+      if (isExpanded) {
+        const totalCPS = getBuildingTotalCPS(i);
+        let cpsLine;
+        if (owned > 0) {
+          const totalRate = gameState.productionRate || 0;
+          const pct = totalRate > 0 ? Math.round(totalCPS / totalRate * 100) : 0;
+          const perUnit = b.baseCPS < 1 ? b.baseCPS.toFixed(2) : formatNumber(b.baseCPS);
+          cpsLine = `每只 ${perUnit}/s · ${owned}只合计 +${formatRate(totalCPS)}/s（占 ${pct}%）`;
+        } else {
+          cpsLine = `单个 ${b.baseCPS < 1 ? b.baseCPS.toFixed(1) : formatNumber(b.baseCPS)} 🍌/秒`;
+        }
+        bodyHtml = `
+          <div class="building-body">
             ${b.desc ? `<div class="building-desc">${b.desc}</div>` : ''}
             <div class="building-cps">${cpsLine}</div>
+            <button class="building-buy-btn${canAfford ? ' affordable' : ''}" data-building="${i}">
+              ${formatNumber(price)} 🍌
+            </button>
+          </div>`;
+      }
+
+      rows.push(`
+        <div class="building-row${isExpanded ? ' expanded' : ''}${canAfford ? ' affordable-row' : ''}" data-building="${i}">
+          <div class="building-header" data-building="${i}">
+            <div class="building-emoji">${b.emoji}</div>
+            <span class="building-name">${b.name}</span>
+            ${owned > 0 ? `<span class="building-count">${owned}</span>` : ''}
+            ${canAfford && !isExpanded ? '<span class="building-afford-dot"></span>' : ''}
+            <span class="building-expand-icon">▶</span>
           </div>
-          <button class="building-buy-btn${canAfford ? ' affordable' : ''}" data-building="${i}">
-            ${formatNumber(price)} 🍌
-          </button>
-        </div>
-      `);
+          ${bodyHtml}
+        </div>`);
     } else if (lockedShown < 2) {
       lockedShown++;
       rows.push(`
-        <div class="building-row locked-row" data-building="${i}">
-          <div class="building-emoji locked-emoji">${b.emoji}</div>
-          <div class="building-info">
-            <div class="building-name-row">
-              <span class="building-name locked-name">???</span>
-            </div>
-            <div class="building-cps locked-cps">解锁需 ${formatNumber(b.basePrice * 0.1)} 🍌</div>
+        <div class="building-row locked-row">
+          <div class="building-header">
+            <div class="building-emoji locked-emoji">${b.emoji}</div>
+            <span class="building-name locked-name">???</span>
+            <span class="building-expand-icon" style="margin-left:auto">🔒</span>
           </div>
-          <button class="building-buy-btn locked-btn" disabled>🔒</button>
-        </div>
-      `);
+        </div>`);
     }
   });
 
   list.innerHTML = rows.join('');
 
+  list.querySelectorAll('.building-header[data-building]').forEach(header => {
+    header.addEventListener('click', () => {
+      const idx = parseInt(header.dataset.building, 10);
+      expandedBuildingIdx = (expandedBuildingIdx === idx) ? null : idx;
+      renderBuildings();
+    });
+  });
+
   list.querySelectorAll('.building-buy-btn:not([disabled])').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = btn.closest('.building-row');
-      const idx = parseInt(row.dataset.building, 10);
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.building, 10);
       if (buyBuilding(idx)) {
         saveGame();
         renderBuildings();
@@ -211,20 +227,41 @@ function updateBuildingAffordability() {
     row.classList.toggle('affordable-row', canAfford);
     const btn = row.querySelector('.building-buy-btn');
     if (btn) btn.classList.toggle('affordable', canAfford);
+    const dot = row.querySelector('.building-afford-dot');
+    if (dot) dot.style.display = (canAfford && !row.classList.contains('expanded')) ? '' : 'none';
   });
 }
 
-// ─── 建筑解锁检测（每秒一次）────────────────────────
+// ─── Tab 红点徽章 ──────────────────────────────────
 
-let _unlockPopupTimer = null;
-function showUnlockPopup(b) {
-  const el = document.getElementById('unlock-popup');
-  if (!el) return;
-  el.textContent = `🎉 新角色解锁：${b.emoji} ${b.name}`;
-  el.classList.add('visible');
-  if (_unlockPopupTimer) clearTimeout(_unlockPopupTimer);
-  _unlockPopupTimer = setTimeout(() => el.classList.remove('visible'), 3000);
+let _newBuildingUnlocks = 0;
+let _newUpgradeUnlocks  = 0;
+const _seenBuildingSet  = new Set();
+const _seenUpgradeSet   = new Set();
+
+function initSeenState() {
+  CONFIG.buildings.forEach((b, i) => {
+    if (gameState.buildingUnlocked[i]) _seenBuildingSet.add(i);
+  });
+  CONFIG.upgrades.forEach(u => {
+    if (gameState.totalBananasEarned >= u.unlockAt) _seenUpgradeSet.add(u.id);
+  });
 }
+
+function updateTabBadges() {
+  const mb = document.getElementById('badge-monkey');
+  const ub = document.getElementById('badge-upgrade');
+  if (mb) {
+    mb.textContent   = _newBuildingUnlocks > 99 ? '99+' : _newBuildingUnlocks;
+    mb.style.display = _newBuildingUnlocks > 0 ? '' : 'none';
+  }
+  if (ub) {
+    ub.textContent   = _newUpgradeUnlocks > 99 ? '99+' : _newUpgradeUnlocks;
+    ub.style.display = _newUpgradeUnlocks > 0 ? '' : 'none';
+  }
+}
+
+// ─── 建筑解锁检测（每秒一次）────────────────────────
 
 function checkBuildingUnlocks() {
   let changed = false;
@@ -233,10 +270,24 @@ function checkBuildingUnlocks() {
     if (!gameState.buildingUnlocked[i] && gameState.totalBananasEarned >= b.basePrice) {
       gameState.buildingUnlocked[i] = true;
       changed = true;
-      showUnlockPopup(b);
+      if (!_seenBuildingSet.has(i)) {
+        _seenBuildingSet.add(i);
+        _newBuildingUnlocks++;
+      }
     }
   });
-  if (changed) renderBuildings();
+  if (changed) { renderBuildings(); updateTabBadges(); }
+}
+
+function checkUpgradeUnlocks() {
+  let changed = false;
+  CONFIG.upgrades.forEach(u => {
+    if (!_seenUpgradeSet.has(u.id) && gameState.totalBananasEarned >= u.unlockAt) {
+      _seenUpgradeSet.add(u.id);
+      if (!gameState.upgradePurchased[u.id]) { _newUpgradeUnlocks++; changed = true; }
+    }
+  });
+  if (changed) updateTabBadges();
 }
 
 // ─── 小猴子围绕香蕉显示 ────────────────────────────
@@ -391,6 +442,7 @@ function applyOfflineEarningsIfNeeded() {
 
 function bootstrapPlayerSession() {
   applyOfflineEarningsIfNeeded();
+  initSeenState();
   checkBuildingUnlocks();
   renderBuildings();
   renderUpgrades();
@@ -429,6 +481,7 @@ function gameLoop(timestamp) {
   if (unlockCheckTimer >= 1) {
     unlockCheckTimer = 0;
     checkBuildingUnlocks();
+    checkUpgradeUnlocks();
     updateTutorial();
     const upgradeTab = document.getElementById('tab-upgrade');
     if (upgradeTab && upgradeTab.classList.contains('active')) renderUpgrades();
@@ -725,6 +778,8 @@ function bindGeneralEvents() {
       document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
       btn.classList.add('active');
       switchTab(tab);
+      if (tab === 'monkey')  { _newBuildingUnlocks = 0; updateTabBadges(); }
+      if (tab === 'upgrade') { _newUpgradeUnlocks  = 0; updateTabBadges(); }
     });
   });
 }
