@@ -1945,6 +1945,8 @@ body {
   max-height: 56px;
   flex-shrink: 0;
   pointer-events: none;
+  background: rgba(0, 8, 0, 0.45);
+  border-top: 1px solid rgba(60, 120, 40, 0.3);
 }
 
 .ring-monkey {
