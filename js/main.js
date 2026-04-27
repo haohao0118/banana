@@ -307,7 +307,8 @@ function renderMonkeysAroundBanana() {
   const ring = document.getElementById('monkey-ring');
   if (!ring) return;
   const count = gameState.buildingCounts[0] || 0;
-  if (count === 0) { ring.innerHTML = ''; return; }
+  if (count === 0) { ring.innerHTML = ''; ring.style.display = 'none'; return; }
+  ring.style.display = '';
   ring.innerHTML = Array.from({ length: count }, () =>
     '<span class="ring-monkey">🐒</span>'
   ).join('');
@@ -634,7 +635,7 @@ function updateTutorial() {
     text = '👆 点击香蕉赚取香蕉！';
   } else if (monkeys === 0) {
     text = '🐒 去猴子树，买一只小猴子（15 🍌）';
-  } else if (gameState.totalBananasEarned < 100) {
+  } else if (gameState.bananaCount < 100) {
     text = '✨ 继续点击，凑够 100 🍌';
   } else {
     text = '🔬 去科技树购买第一个升级（100 🍌）';

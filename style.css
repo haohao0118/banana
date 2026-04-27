@@ -242,7 +242,7 @@ body {
 }
 
 .banana-img {
-  width: clamp(380px, 100vw, 560px);
+  width: clamp(570px, 150vw, 840px);
   height: auto;
   display: block;
   image-rendering: pixelated;
@@ -848,7 +848,7 @@ body {
 
 @media (max-height: 680px) {
   .banana-img {
-    width: clamp(270px, 78vw, 390px);
+    width: clamp(405px, 117vw, 585px);
   }
   .click-area {
     padding: 8px 20px 6px;
@@ -1854,12 +1854,12 @@ body {
 }
 
 .building-count {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 900;
   color: #ffffff;
   font-family: 'Courier New', Courier, monospace;
   flex-shrink: 0;
-  min-width: 28px;
+  min-width: 34px;
   text-align: right;
   text-shadow: 0 0 8px rgba(180, 255, 100, 0.5), 0 1px 3px rgba(0,0,0,0.9);
   letter-spacing: -1px;
@@ -1937,19 +1937,16 @@ body {
    小猴子背景横排
    ============================================ */
 .monkey-ring {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 38%;
-  pointer-events: none;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  align-content: flex-start;
-  padding: 4px 4px;
+  padding: 3px 6px 4px;
   gap: 0;
   overflow: hidden;
+  max-height: 56px;
+  flex-shrink: 0;
+  pointer-events: none;
+  background: rgba(0, 8, 0, 0.45);
+  border-top: 1px solid rgba(60, 120, 40, 0.3);
 }
 
 .ring-monkey {
@@ -2074,10 +2071,11 @@ body {
 
 /* 状态：已拥有 */
 .upgrade-icon.upgrade-owned {
-  border-color: rgba(50,100,30,0.35);
-  background: rgba(5,20,5,0.5);
-  filter: grayscale(0.55) brightness(0.6);
+  border-color: rgba(60, 160, 40, 0.65);
+  background: rgba(15, 55, 10, 0.8);
+  filter: none;
   cursor: default;
+  opacity: 0.85;
 }
 
 /* 选中态 */
