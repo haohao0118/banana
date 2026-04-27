@@ -22,24 +22,57 @@ function buyBuilding(index) {
 }
 
 function recalcProductionRate() {
-  let total = 0;
-  CONFIG.buildings.forEach((b, i) => {
-    total += b.baseCPS * (gameState.buildingCounts[i] || 0);
-  });
-  let mult = 1;
+  const n = CONFIG.buildings.length;
+  const bMult     = new Array(n).fill(1); // per-building multiplier
+  const synMult   = new Array(n).fill(1); // synergy multiplier
+  const counts    = gameState.buildingCounts;
+  let   globalMult = 1;
+
   CONFIG.upgrades.forEach(u => {
-    if (gameState.upgradePurchased[u.id] && u.effect.type === 'cps_mult') {
-      mult *= u.effect.value;
+    if (!gameState.upgradePurchased[u.id]) return;
+    const ef = u.effect;
+    if (ef.type === 'cps_mult') {
+      globalMult *= ef.value;
+    } else if (ef.type === 'building_cps_mult') {
+      const i = CONFIG.buildings.findIndex(b => b.id === ef.buildingId);
+      if (i >= 0) bMult[i] *= ef.value;
+    } else if (ef.type === 'synergy') {
+      const ia = CONFIG.buildings.findIndex(b => b.id === ef.a);
+      const ib = CONFIG.buildings.findIndex(b => b.id === ef.b);
+      if (ia >= 0 && ib >= 0) {
+        synMult[ia] *= (1 + (counts[ib] || 0) * ef.pct);
+        synMult[ib] *= (1 + (counts[ia] || 0) * ef.pct);
+      }
+    } else if (ef.type === 'grandma_variant') {
+      const ig = CONFIG.buildings.findIndex(b => b.id === 'grandma');
+      const il = CONFIG.buildings.findIndex(b => b.id === ef.buildingId);
+      if (ig >= 0) bMult[ig] *= ef.grandmaBoost;
+      if (il >= 0) synMult[il] *= (1 + (counts[ig] || 0) * ef.linkedBoost);
     }
   });
-  gameState.productionRate = total * mult;
+
+  let total = 0;
+  CONFIG.buildings.forEach((b, i) => {
+    total += b.baseCPS * (counts[i] || 0) * bMult[i] * synMult[i];
+  });
+  gameState.productionRate = total * globalMult;
 }
 
 function buyUpgrade(id) {
   const u = CONFIG.upgrades.find(u => u.id === id);
   if (!u || gameState.upgradePurchased[id]) return false;
   if (gameState.bananaCount < u.cost) return false;
-  if (gameState.totalBananasEarned < u.unlockAt) return false;
+  // check unlock condition
+  if (u.unlockBuilding) {
+    const ia = CONFIG.buildings.findIndex(b => b.id === u.unlockBuilding.id);
+    if (ia < 0 || (gameState.buildingCounts[ia] || 0) < u.unlockBuilding.count) return false;
+    if (u.unlockBuilding.id2) {
+      const ib = CONFIG.buildings.findIndex(b => b.id === u.unlockBuilding.id2);
+      if (ib < 0 || (gameState.buildingCounts[ib] || 0) < (u.unlockBuilding.count2 || 1)) return false;
+    }
+  } else if (gameState.totalBananasEarned < (u.unlockAt || 0)) {
+    return false;
+  }
   gameState.bananaCount -= u.cost;
   gameState.upgradePurchased[id] = true;
   recalcProductionRate();

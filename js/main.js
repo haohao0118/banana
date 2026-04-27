@@ -236,12 +236,26 @@ let _newUpgradeUnlocks  = 0;
 const _seenBuildingSet  = new Set();
 const _seenUpgradeSet   = new Set();
 
+function isUpgradeUnlocked(u) {
+  if (u.unlockBuilding) {
+    const idx  = CONFIG.buildings.findIndex(b => b.id === u.unlockBuilding.id);
+    const ok   = idx >= 0 && (gameState.buildingCounts[idx] || 0) >= u.unlockBuilding.count;
+    if (!ok) return false;
+    if (u.unlockBuilding.id2) {
+      const idx2 = CONFIG.buildings.findIndex(b => b.id === u.unlockBuilding.id2);
+      return idx2 >= 0 && (gameState.buildingCounts[idx2] || 0) >= (u.unlockBuilding.count2 || 1);
+    }
+    return true;
+  }
+  return gameState.totalBananasEarned >= (u.unlockAt || 0);
+}
+
 function initSeenState() {
   CONFIG.buildings.forEach((b, i) => {
     if (gameState.buildingUnlocked[i]) _seenBuildingSet.add(i);
   });
   CONFIG.upgrades.forEach(u => {
-    if (gameState.totalBananasEarned >= u.unlockAt) _seenUpgradeSet.add(u.id);
+    if (isUpgradeUnlocked(u)) _seenUpgradeSet.add(u.id);
   });
 }
 
@@ -279,7 +293,7 @@ function checkBuildingUnlocks() {
 function checkUpgradeUnlocks() {
   let changed = false;
   CONFIG.upgrades.forEach(u => {
-    if (!_seenUpgradeSet.has(u.id) && gameState.totalBananasEarned >= u.unlockAt) {
+    if (!_seenUpgradeSet.has(u.id) && isUpgradeUnlocked(u)) {
       _seenUpgradeSet.add(u.id);
       if (!gameState.upgradePurchased[u.id]) { _newUpgradeUnlocks++; changed = true; }
     }
@@ -294,10 +308,9 @@ function renderMonkeysAroundBanana() {
   if (!ring) return;
   const count = gameState.buildingCounts[0] || 0;
   if (count === 0) { ring.innerHTML = ''; return; }
-  ring.innerHTML = Array.from({ length: count }, (_, i) => {
-    const delay = ((i % 12) / 12 * 2).toFixed(1);
-    return `<span class="ring-monkey" style="animation-delay:${delay}s">🐒</span>`;
-  }).join('');
+  ring.innerHTML = Array.from({ length: count }, () =>
+    '<span class="ring-monkey">🐒</span>'
+  ).join('');
 }
 
 // ─── 小猴子点击视觉效果（每 10 秒）────────────────
@@ -512,7 +525,7 @@ let selectedUpgradeId = null;
 
 function getUpgradeState(u) {
   if (gameState.upgradePurchased[u.id]) return 'owned';
-  if (gameState.totalBananasEarned < u.unlockAt) return 'hidden';
+  if (!isUpgradeUnlocked(u)) return 'hidden';
   if (gameState.bananaCount >= u.cost) return 'available';
   return 'locked';
 }
@@ -556,7 +569,11 @@ function updateUpgradeDetail() {
   const state   = getUpgradeState(u);
   const isOwned = state === 'owned';
   const canBuy  = state === 'available';
-  const catLabel = u.category === 'click' ? '点击力' : '产速';
+  const catLabel = u.category === 'click' ? '点击力'
+    : u.category === 'synergy'  ? '协同'
+    : u.category === 'grandma'  ? '长老'
+    : u.category === 'building' ? '建筑'
+    : '产速';
 
   panel.innerHTML = `
     <div class="upgrade-detail-inner">

@@ -1824,7 +1824,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 16px 14px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1938,13 +1938,16 @@ body {
    ============================================ */
 .monkey-ring {
   position: absolute;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 38%;
   pointer-events: none;
   z-index: 1;
   display: flex;
-  flex-wrap: wrap-reverse;
+  flex-wrap: wrap;
   align-content: flex-start;
-  padding: 6px 4px;
+  padding: 4px 4px;
   gap: 0;
   overflow: hidden;
 }
@@ -1954,7 +1957,6 @@ body {
   line-height: 1;
   pointer-events: none;
   user-select: none;
-  animation: monkeyBob 2s ease-in-out infinite;
   display: inline-block;
 }
 
