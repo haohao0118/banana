@@ -153,12 +153,26 @@ async function registerPlayerAccount(username, password) {
     return { success: false, message: '注册失败，请稍后再试' };
   }
 
-  const userId  = data.user.id;
+  const userId = data?.user?.id;
+  if (!userId) return { success: false, message: '注册失败，请稍后再试' };
+
   const saveData = createDefaultSaveData();
-  await Promise.all([
-    supabaseClient.from('profiles').insert({ id: userId, username: name }),
-    supabaseClient.from('game_saves').insert({ user_id: userId, save_data: saveData }),
-  ]);
+  const profileRes = await supabaseClient.from('profiles').upsert({ id: userId, username: name }, { onConflict: 'id' });
+  const saveRes = await supabaseClient.from('game_saves').upsert(
+    { user_id: userId, save_data: saveData, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id' }
+  );
+
+  if (profileRes.error || saveRes.error) {
+    const needEmailConfirm = !data.session;
+    if (needEmailConfirm) {
+      return {
+        success: false,
+        message: '注册成功，请先到邮箱完成验证后再登录（Supabase 开启了邮箱确认）'
+      };
+    }
+    return { success: false, message: '注册失败，请稍后再试' };
+  }
 
   gameState.currentUser     = name;
   gameState.currentUserId   = userId;
@@ -173,17 +187,25 @@ async function loginPlayerAccount(username, password) {
   const name = String(username || '').trim();
   if (!name || !password) return { success: false, message: '用户名和密码不能为空' };
 
-  const { data: profile } = await supabaseClient
-    .from('profiles').select('id, username').ilike('username', name).maybeSingle();
-  if (!profile) return { success: false, message: '账号不存在，请先注册' };
-
   const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: toEmail(name), password,
   });
-  if (error) return { success: false, message: '密码错误' };
+  if (error || !data?.user?.id) return { success: false, message: '用户名或密码错误' };
+
+  const userId = data.user.id;
+  let { data: profile } = await supabaseClient
+    .from('profiles').select('id, username').eq('id', userId).maybeSingle();
+
+  if (!profile) {
+    await supabaseClient.from('profiles').upsert({ id: userId, username: name }, { onConflict: 'id' });
+    ({ data: profile } = await supabaseClient
+      .from('profiles').select('id, username').eq('id', userId).maybeSingle());
+  }
+
+  if (!profile) return { success: false, message: '登录成功但角色资料缺失，请联系管理员检查 RLS 策略' };
 
   gameState.currentUser     = profile.username;
-  gameState.currentUserId   = data.user.id;
+  gameState.currentUserId   = userId;
   gameState.isAuthenticated = true;
   await loadGame();
   return { success: true, username: profile.username };
