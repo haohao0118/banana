@@ -147,14 +147,27 @@ async function registerPlayerAccount(username, password) {
     .from('profiles').select('id').ilike('username', name).maybeSingle();
   if (existing) return { success: false, message: '该用户名已被使用' };
 
-  const { data, error } = await supabaseClient.auth.signUp({ email: toEmail(name), password });
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: toEmail(name),
+    password,
+    options: { data: { username: name } },
+  });
   if (error) {
     if (error.message.includes('already registered')) return { success: false, message: '该用户名已被使用' };
-    return { success: false, message: '注册失败，请稍后再试' };
+    return { success: false, message: error.message || '注册失败，请稍后再试' };
   }
 
   const userId = data?.user?.id;
   if (!userId) return { success: false, message: '注册失败，请稍后再试' };
+
+  if (!data.session) {
+    return {
+      success: true,
+      username: name,
+      pendingEmailConfirm: true,
+      message: '注册成功，请先到邮箱完成验证后再登录'
+    };
+  }
 
   const saveData = createDefaultSaveData();
   const profileRes = await supabaseClient.from('profiles').upsert({ id: userId, username: name }, { onConflict: 'id' });
@@ -164,14 +177,7 @@ async function registerPlayerAccount(username, password) {
   );
 
   if (profileRes.error || saveRes.error) {
-    const needEmailConfirm = !data.session;
-    if (needEmailConfirm) {
-      return {
-        success: false,
-        message: '注册成功，请先到邮箱完成验证后再登录（Supabase 开启了邮箱确认）'
-      };
-    }
-    return { success: false, message: '注册失败，请稍后再试' };
+    return { success: false, message: profileRes.error?.message || saveRes.error?.message || '注册失败，请稍后再试' };
   }
 
   gameState.currentUser     = name;
@@ -190,19 +196,22 @@ async function loginPlayerAccount(username, password) {
   const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: toEmail(name), password,
   });
-  if (error || !data?.user?.id) return { success: false, message: '用户名或密码错误' };
+  if (error || !data?.user?.id) return { success: false, message: error?.message || '用户名或密码错误' };
 
   const userId = data.user.id;
-  let { data: profile } = await supabaseClient
+  let { data: profile, error: profileError } = await supabaseClient
     .from('profiles').select('id, username').eq('id', userId).maybeSingle();
 
-  if (!profile) {
-    await supabaseClient.from('profiles').upsert({ id: userId, username: name }, { onConflict: 'id' });
-    ({ data: profile } = await supabaseClient
-      .from('profiles').select('id, username').eq('id', userId).maybeSingle());
-  }
+  if (profileError) return { success: false, message: profileError.message || '登录失败，请稍后再试' };
 
-  if (!profile) return { success: false, message: '登录成功但角色资料缺失，请联系管理员检查 RLS 策略' };
+  if (!profile) {
+    const fallbackName = name || (data.user.email ? data.user.email.split('@')[0] : '');
+    const upsertRes = await supabaseClient.from('profiles').upsert({ id: userId, username: fallbackName }, { onConflict: 'id' });
+    if (upsertRes.error) return { success: false, message: upsertRes.error.message || '登录失败，请稍后再试' };
+    ({ data: profile, error: profileError } = await supabaseClient
+      .from('profiles').select('id, username').eq('id', userId).maybeSingle());
+    if (profileError || !profile) return { success: false, message: profileError?.message || '登录失败，请稍后再试' };
+  }
 
   gameState.currentUser     = profile.username;
   gameState.currentUserId   = userId;

@@ -433,6 +433,12 @@ async function handleAuthSubmit(type) {
   try { result = await action(username, password); }
   catch (e) { console.error('Auth error:', e); showToast('网络错误，请检查控制台'); return; }
   if (!result.success) { showToast(result.message || '操作失败'); return; }
+
+  if (result.pendingEmailConfirm) {
+    showToast(result.message || '注册成功，请先完成邮箱验证');
+    return;
+  }
+
   closeAuthModal();
   showToast(type === 'register' ? '注册成功，已自动登录' : '登录成功');
   bootstrapPlayerSession();
