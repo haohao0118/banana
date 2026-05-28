@@ -431,7 +431,20 @@ async function handleAuthSubmit(type) {
   const action   = type === 'register' ? registerPlayerAccount : loginPlayerAccount;
   let result;
   try { result = await action(username, password); }
-  catch (e) { console.error('Auth error:', e); showToast('网络错误，请检查控制台'); return; }
+  catch (e) {
+    console.error('Auth error:', e);
+    const msg = String(e?.message || '');
+    if (location.protocol === 'file:') {
+      showToast('请通过本地服务器打开页面，不要直接双击 html 文件');
+      return;
+    }
+    if (/failed to fetch|networkerror/i.test(msg)) {
+      showToast('无法连接 Supabase，请检查网络、项目 URL 或浏览器 CORS');
+      return;
+    }
+    showToast(msg || '网络错误，请检查控制台');
+    return;
+  }
   if (!result.success) { showToast(result.message || '操作失败'); return; }
 
   if (result.pendingEmailConfirm) {

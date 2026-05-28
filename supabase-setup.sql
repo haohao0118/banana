@@ -43,3 +43,24 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 3. 开启行级安全（RLS）
+ALTER TABLE profiles  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game_saves ENABLE ROW LEVEL SECURITY;
+
+-- 4. profiles 策略
+-- SELECT 允许所有人读（登录时需要按用户名查找 id，此时还未认证）
+DROP POLICY IF EXISTS "public_read_profiles" ON profiles;
+CREATE POLICY "public_read_profiles" ON profiles
+  FOR SELECT USING (true);
+
+-- INSERT/UPDATE/DELETE 只能操作自己的记录
+DROP POLICY IF EXISTS "own_profile_write" ON profiles;
+CREATE POLICY "own_profile_write" ON profiles
+  FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+-- 5. game_saves 策略：只能读写自己的记录
+DROP POLICY IF EXISTS "own_saves_all" ON game_saves;
+CREATE POLICY "own_saves_all" ON game_saves
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
