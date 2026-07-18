@@ -5,8 +5,12 @@
 CREATE TABLE IF NOT EXISTS profiles (
   id         uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username   text UNIQUE NOT NULL,
+  email      text,
   created_at timestamptz DEFAULT now()
 );
+
+-- 兼容已创建的 profiles 表
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email text;
 
 -- 2. 存档表（每人一行，存档以 JSONB 格式整体存）
 CREATE TABLE IF NOT EXISTS game_saves (
@@ -27,8 +31,8 @@ DECLARE
 BEGIN
   v_username := COALESCE(NULLIF(new.raw_user_meta_data->>'username', ''), split_part(new.email, '@', 1));
 
-  INSERT INTO public.profiles (id, username)
-  VALUES (new.id, v_username)
+  INSERT INTO public.profiles (id, username, email)
+  VALUES (new.id, v_username, new.email)
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.game_saves (user_id, save_data, updated_at)
@@ -63,4 +67,3 @@ CREATE POLICY "own_profile_write" ON profiles
 DROP POLICY IF EXISTS "own_saves_all" ON game_saves;
 CREATE POLICY "own_saves_all" ON game_saves
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-

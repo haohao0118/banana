@@ -7,4 +7,7 @@
 const SUPABASE_URL      = 'https://fuweeodnlhgcxreizroy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1d2Vlb2RubGhnY3hyZWl6cm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTQ2OTAsImV4cCI6MjA5MjU5MDY5MH0.M0sypby2uqaVEoiwnrZDFiLeggqwqTA6eJnAluDe0tA'; // ← 替换成 Legacy anon key（eyJ 开头）
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// CDN 加载失败时保留空客户端，让页面仍能显示可操作的错误提示。
+const supabaseClient = window.supabase?.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;

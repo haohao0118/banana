@@ -6,6 +6,7 @@ let unlockCheckTimer  = 0;
 let cursorClickTimer  = 0;
 let gameLoopStarted   = false;
 let authMode        = 'register';
+let authSubmitting  = false;
 let resetTimer      = null;
 let resetPending    = false;
 let bananaTouch     = null;
@@ -409,13 +410,18 @@ function closeAuthModal() {
 function syncAuthModeUI() {
   const switchBtn = document.getElementById('auth-switch-mode');
   const prompt    = document.querySelector('#auth-modal .modal-offline-desc');
+  const emailInput = document.getElementById('auth-email');
   if (!switchBtn || !prompt) return;
   if (authMode === 'register') {
     switchBtn.textContent = '切换到登录';
-    prompt.textContent    = '首次进入请注册账号，之后会自动保持登录状态';
+    prompt.textContent    = '首次进入请注册账号；若开启邮箱验证，请填写可收信的邮箱';
   } else {
     switchBtn.textContent = '切换到注册';
     prompt.textContent    = '已有账号可以直接登录，首次进入请先注册';
+  }
+  if (emailInput) {
+    emailInput.style.display = authMode === 'register' ? '' : 'none';
+    emailInput.required = false;
   }
 }
 
@@ -425,12 +431,34 @@ function toggleAuthMode() {
   syncAuthModeHint();
 }
 
+function withTimeout(promise, timeoutMs, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function handleAuthSubmit(type) {
+  if (authSubmitting) return;
   const username = document.getElementById('auth-username').value;
   const password = document.getElementById('auth-password').value;
+  const email    = document.getElementById('auth-email')?.value || '';
   const action   = type === 'register' ? registerPlayerAccount : loginPlayerAccount;
+  const registerBtn = document.getElementById('auth-register');
+  const loginBtn = document.getElementById('auth-login');
   let result;
-  try { result = await action(username, password); }
+  authSubmitting = true;
+  registerBtn.disabled = true;
+  loginBtn.disabled = true;
+  const originalText = type === 'register' ? registerBtn.textContent : loginBtn.textContent;
+  const activeBtn = type === 'register' ? registerBtn : loginBtn;
+  activeBtn.textContent = type === 'register' ? '注册中...' : '登录中...';
+  showToast(type === 'register' ? '正在注册账号...' : '正在登录...');
+  try {
+    const request = type === 'register' ? action(username, password, email) : action(username, password);
+    result = await withTimeout(request, 8000, '认证服务连接超时，请联系管理员检查 Supabase 配置');
+  }
   catch (e) {
     console.error('Auth error:', e);
     const msg = String(e?.message || '');
@@ -444,6 +472,11 @@ async function handleAuthSubmit(type) {
     }
     showToast(msg || '网络错误，请检查控制台');
     return;
+  } finally {
+    authSubmitting = false;
+    registerBtn.disabled = false;
+    loginBtn.disabled = false;
+    activeBtn.textContent = originalText;
   }
   if (!result.success) { showToast(result.message || '操作失败'); return; }
 
